@@ -1,6 +1,16 @@
-const evtSource = new EventSource('http://localhost:3000/events');
+const evtSource = new EventSource('http://localhost:3000/count');
+
+const countElm = document.querySelector('.event-count');
+const button = document.querySelector('.increment');
+
+button.addEventListener('click', () => {
+  fetch('http://localhost:3000/increment', {
+    method: 'POST'
+  });
+});
 
 evtSource.addEventListener('count', (event) => {
   console.log('count event listener');
-  console.log(JSON.parse(event.data));
+  const data = JSON.parse(event.data);
+  countElm.innerHTML = data.eventCount || 0;
 });

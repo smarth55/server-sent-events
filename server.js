@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const ssestream = require('ssestream');
+const { default: SseStream } = require('ssestream');
 
 const PORT = 3000;
 
@@ -10,22 +10,28 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
-app.get('/events', (req, res) => {
-  let sse = new ssestream();
+let eventCount = 0;
+let subs = [];
+
+app.post('/increment', (req, res) => {
+  eventCount++;
+  subs.forEach(sse => {
+    sse.write({event: 'count', data: {eventCount}});
+  });
+});
+
+app.get('/count', (req, res) => {
+  let sse = new SseStream();
   sse.pipe(res);
-
-  let count = 0;
-
-  sse.write({event: 'count', data: {count}});
-  const interval = setInterval(() => {
-    count++;
-    console.log('writing data', count);
-    sse.write({event: 'count', data: {count}});
-  }, 2000);
+  subs = [...subs, sse];
+  console.log(`new sub. current length is ${subs.length}`);
+  sse.write({event: 'count', data: {eventCount}});
 
   req.on('close', () => {
     console.log('connection closed');
-    clearInterval(interval);
+    sse.unpipe(res);
+    subs = subs.filter(sub => sub !== sse);
+    console.log(`remaining subs length is ${subs.length}`);
   });
 });
 
