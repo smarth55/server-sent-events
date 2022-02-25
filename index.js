@@ -10,7 +10,6 @@ button.addEventListener('click', () => {
 });
 
 evtSource.addEventListener('count', (event) => {
-  console.log('count event listener');
   const data = JSON.parse(event.data);
   countElm.innerHTML = data.eventCount || 0;
 });
