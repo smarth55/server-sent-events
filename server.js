@@ -18,20 +18,18 @@ app.post('/increment', (req, res) => {
   subs.forEach(sse => {
     sse.write({event: 'count', data: {eventCount}});
   });
+  res.sendStatus(200);
 });
 
 app.get('/count', (req, res) => {
   let sse = new SseStream();
   sse.pipe(res);
   subs = [...subs, sse];
-  console.log(`new sub. current length is ${subs.length}`);
   sse.write({event: 'count', data: {eventCount}});
 
   req.on('close', () => {
-    console.log('connection closed');
     sse.unpipe(res);
     subs = subs.filter(sub => sub !== sse);
-    console.log(`remaining subs length is ${subs.length}`);
   });
 });
 
